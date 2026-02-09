@@ -16,6 +16,7 @@ interface HmrUpdate {
   updatedModules: Set<string>
   startMsSinceEpoch: number
   endMsSinceEpoch: number
+  compilationId?: string
 }
 
 export class TurbopackHmr {
@@ -24,6 +25,7 @@ export class TurbopackHmr {
   #lastUpdateMsSinceEpoch: number | undefined
   #deferredReportHmrStartId: ReturnType<typeof setTimeout> | undefined
   #reportedHmrStart: boolean
+  #compilationId: string | undefined
 
   constructor() {
     this.#updatedModules = new Set()
@@ -51,10 +53,11 @@ export class TurbopackHmr {
     this.#deferredReportHmrStartId = undefined
   }
 
-  onBuilding() {
+  onBuilding(compilationId?: string) {
     this.#lastUpdateMsSinceEpoch = undefined
     this.#cancelDeferredReportHmrStart()
     this.#startMsSinceEpoch = Date.now()
+    this.#compilationId = compilationId
 
     // report the HMR start after a short delay
     this.#deferredReportHmrStartId = setTimeout(
@@ -117,9 +120,11 @@ export class TurbopackHmr {
       updatedModules: this.#updatedModules,
       startMsSinceEpoch: this.#startMsSinceEpoch!,
       endMsSinceEpoch: this.#lastUpdateMsSinceEpoch ?? Date.now(),
+      compilationId: this.#compilationId,
     }
     this.#updatedModules = new Set()
     this.#reportedHmrStart = false
+    this.#compilationId = undefined
     return result
   }
 }

@@ -41,6 +41,8 @@ import { removePathPrefix } from '../../shared/lib/router/utils/remove-path-pref
 import { Telemetry } from '../../telemetry/storage'
 import { type Span, setGlobal, trace } from '../../trace'
 import { traceGlobals } from '../../trace/shared'
+import { reporter } from '../../trace/report'
+import type { TraceEvent } from '../../trace/types'
 import { findPageFile } from '../lib/find-page-file'
 import { getFormattedNodeOptionsWithoutInspect } from '../lib/utils'
 import { withCoalescedInvoke } from '../../lib/coalesced-function'
@@ -532,6 +534,51 @@ export default class DevServer extends Server {
               getRequestMeta(req, 'devRequestTimingInternalsEnd'),
               getRequestMeta(req, 'devGenerateStaticParamsDuration')
             )
+
+            // Create trace span for render phase
+            const devRequestTimingInternalsEnd = getRequestMeta(
+              req,
+              'devRequestTimingInternalsEnd'
+            )
+            if (devRequestTimingInternalsEnd) {
+              try {
+                // Convert bigint nanoseconds to number microseconds for trace events
+                const NUM_OF_MICROSEC_IN_NANOSEC = BigInt('1000')
+
+                // render-path: from internals end to request end
+                const renderStartMicrosec = Number(
+                  devRequestTimingInternalsEnd / NUM_OF_MICROSEC_IN_NANOSEC
+                )
+                const renderEndMicrosec = Number(
+                  requestEnd / NUM_OF_MICROSEC_IN_NANOSEC
+                )
+                const renderDurationMicrosec =
+                  renderEndMicrosec - renderStartMicrosec
+
+                const renderEvent: TraceEvent = {
+                  name: 'render-path',
+                  duration: renderDurationMicrosec,
+                  timestamp: renderStartMicrosec,
+                  id: Math.random() * 1000000,
+                  tags: {
+                    path: req.url || '',
+                  },
+                  startTime:
+                    Date.now() -
+                    Number(
+                      (requestEnd - devRequestTimingInternalsEnd) /
+                        BigInt('1000000')
+                    ),
+                }
+
+                reporter.report(renderEvent)
+              } catch (err) {
+                console.error(
+                  '[Render Trace] Error creating render-path trace span:',
+                  err
+                )
+              }
+            }
           })
         }
       }

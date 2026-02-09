@@ -515,6 +515,9 @@ export async function createHotReloaderTurbopack(
 
   let hmrEventHappened = false
   let hmrHash = 0
+  let compilationIdCounter = 0
+  let currentCompilationId: string | undefined
+  let lastCompilationId: string | undefined
 
   const clientsWithoutHtmlRequestId = new Set<ws>()
   const clientsByHtmlRequestId = new Map<string, ws>()
@@ -1038,7 +1041,7 @@ export async function createHotReloaderTurbopack(
               )
               break
             }
-            case 'client-hmr-latency': // { id, startTime, endTime, page, updatedModules, isPageHidden }
+            case 'client-hmr-latency': // { id, startTime, endTime, page, updatedModules, isPageHidden, compilationId }
               hotReloaderSpan.manualTraceChild(
                 parsedData.event,
                 msToNs(parsedData.startTime),
@@ -1047,6 +1050,7 @@ export async function createHotReloaderTurbopack(
                   updatedModules: parsedData.updatedModules,
                   page: parsedData.page,
                   isPageHidden: parsedData.isPageHidden,
+                  compilationId: parsedData.compilationId,
                 }
               )
               break
@@ -1566,7 +1570,13 @@ export async function createHotReloaderTurbopack(
     for await (const updateMessage of project.updateInfoSubscribe(30)) {
       switch (updateMessage.updateType) {
         case 'start': {
-          hotReloader.send({ type: HMR_MESSAGE_SENT_TO_BROWSER.BUILDING })
+          // Generate compilation ID for client HMR correlation
+          currentCompilationId = String(++compilationIdCounter)
+
+          hotReloader.send({
+            type: HMR_MESSAGE_SENT_TO_BROWSER.BUILDING,
+            compilationId: currentCompilationId,
+          })
           // Mark that HMR has started and we need to call the callback after it settles
           // This ensures onBeforeDeferredEntries will be called again during HMR
           if (hasDeferredEntriesConfig) {
@@ -1578,6 +1588,12 @@ export async function createHotReloaderTurbopack(
         }
         case 'end': {
           sendEnqueuedMessages()
+
+          // Track last compilationId for client HMR correlation
+          if (currentCompilationId) {
+            lastCompilationId = currentCompilationId
+            currentCompilationId = undefined
+          }
 
           function addToErrorsMap(
             errorsMap: Map<string, CompilationError>,
@@ -1628,6 +1644,7 @@ export async function createHotReloaderTurbopack(
               hash: String(++hmrHash),
               errors: [...clientErrors.values()],
               warnings: [],
+              compilationId: lastCompilationId,
             })
           }
 

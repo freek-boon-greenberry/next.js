@@ -58,10 +58,12 @@ export interface ServerErrorMessage {
 export interface TurbopackMessage {
   type: HMR_MESSAGE_SENT_TO_BROWSER.TURBOPACK_MESSAGE
   data: TurbopackUpdate | TurbopackUpdate[]
+  compilationId?: string
 }
 
 export interface BuildingMessage {
   type: HMR_MESSAGE_SENT_TO_BROWSER.BUILDING
+  compilationId?: string
 }
 
 export interface CompilationError {
@@ -90,6 +92,7 @@ export interface BuiltMessage {
   errors: ReadonlyArray<CompilationError>
   warnings: ReadonlyArray<CompilationError>
   updatedModules?: ReadonlyArray<string>
+  compilationId?: string
 }
 
 export interface AddedPageMessage {

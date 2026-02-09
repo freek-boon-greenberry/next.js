@@ -142,7 +142,14 @@ function tryApplyUpdatesWebpack(sendMessage: (message: string) => void) {
   if (!isUpdateAvailable() || !canApplyUpdates()) {
     resolvePendingHotUpdateWebpack()
     dispatcher.onBuildOk()
-    reportHmrLatency(sendMessage, [], webpackStartMsSinceEpoch!, Date.now())
+    reportHmrLatency(
+      sendMessage,
+      [],
+      webpackStartMsSinceEpoch!,
+      Date.now(),
+      true,
+      undefined
+    )
     return
   }
 
@@ -174,7 +181,9 @@ function tryApplyUpdatesWebpack(sendMessage: (message: string) => void) {
       sendMessage,
       updatedModules,
       webpackStartMsSinceEpoch!,
-      Date.now()
+      Date.now(),
+      true,
+      undefined
     )
 
     if (process.env.__NEXT_TEST_MODE) {
@@ -254,7 +263,8 @@ export function processMessage(
           hmrUpdate.startMsSinceEpoch,
           hmrUpdate.endMsSinceEpoch,
           // suppress the `client-hmr-latency` event if the update was a no-op:
-          hmrUpdate.hasUpdates
+          hmrUpdate.hasUpdates,
+          hmrUpdate.compilationId
         )
       }
       dispatcher.onBuildOk()
@@ -287,7 +297,7 @@ export function processMessage(
       dispatcher.buildingIndicatorShow()
 
       if (process.env.TURBOPACK) {
-        turbopackHmr!.onBuilding()
+        turbopackHmr!.onBuilding(message.compilationId)
       } else {
         webpackStartMsSinceEpoch = Date.now()
         setPendingHotUpdateWebpack()

@@ -151,7 +151,8 @@ function handleSuccess() {
         [...hmrUpdate.updatedModules],
         hmrUpdate.startMsSinceEpoch,
         hmrUpdate.endMsSinceEpoch,
-        hmrUpdate.hasUpdates
+        hmrUpdate.hasUpdates,
+        hmrUpdate.compilationId
       )
     }
     dispatcher.onBuildOk()
@@ -283,7 +284,7 @@ function processMessage(message: HmrMessageSentToBrowser) {
       dispatcher.buildingIndicatorShow()
 
       if (process.env.TURBOPACK) {
-        turbopackHmr!.onBuilding()
+        turbopackHmr!.onBuilding(message.compilationId)
       } else {
         webpackStartMsSinceEpoch = Date.now()
         console.log('[Fast Refresh] rebuilding')
@@ -496,7 +497,9 @@ function tryApplyUpdatesWebpack() {
       sendMessage,
       updatedModules,
       webpackStartMsSinceEpoch!,
-      Date.now()
+      Date.now(),
+      true,
+      undefined
     )
 
     if (process.env.__NEXT_TEST_MODE) {

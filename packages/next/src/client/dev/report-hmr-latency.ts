@@ -20,7 +20,8 @@ export default function reportHmrLatency(
   updatedModules: ReadonlyArray<string | number>,
   startMsSinceEpoch: number,
   endMsSinceEpoch: number,
-  hasUpdate: boolean = true
+  hasUpdate: boolean = true,
+  compilationId?: string
 ) {
   const latencyMs = endMsSinceEpoch - startMsSinceEpoch
   console.log(`[Fast Refresh] done in ${latencyMs}ms`)
@@ -38,6 +39,7 @@ export default function reportHmrLatency(
       // Whether the page (tab) was hidden at the time the event occurred.
       // This can impact the accuracy of the event's timing.
       isPageHidden: document.visibilityState === 'hidden',
+      compilationId,
     })
   )
   if (self.__NEXT_HMR_LATENCY_CB) {
