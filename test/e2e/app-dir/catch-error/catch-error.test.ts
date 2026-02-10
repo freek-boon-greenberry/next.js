@@ -7,7 +7,7 @@ describe('app-dir - catchError', () => {
 
   describe('client component error', () => {
     it('should catch error and render fallback with props', async () => {
-      const browser = await next.browser('/client-component/catch-error')
+      const browser = await next.browser('/client-component')
       await browser
         .elementByCss('#error-trigger-button')
         .click()
@@ -26,7 +26,7 @@ describe('app-dir - catchError', () => {
     })
 
     it('should reset error boundary', async () => {
-      const browser = await next.browser('/client-component/catch-error')
+      const browser = await next.browser('/client-component')
 
       await browser
         .elementByCss('#error-trigger-button')
@@ -44,7 +44,7 @@ describe('app-dir - catchError', () => {
     })
 
     it('should retry and recover from client error', async () => {
-      const browser = await next.browser('/client-component/catch-error')
+      const browser = await next.browser('/client-component')
 
       for (let i = 0; i < 3; i++) {
         await browser
@@ -70,7 +70,7 @@ describe('app-dir - catchError', () => {
 
   describe('server component error', () => {
     it('should catch server component error and render fallback with props', async () => {
-      const browser = await next.browser('/server-component/catch-error')
+      const browser = await next.browser('/server-component')
 
       expect(
         await browser.waitForElementByCss('#error-boundary-message').text()
@@ -85,9 +85,7 @@ describe('app-dir - catchError', () => {
     })
 
     it('should recover server component error after retry', async () => {
-      const browser = await next.browser(
-        '/server-component/catch-error/recover'
-      )
+      const browser = await next.browser('/server-component/recover')
 
       expect(
         await browser.waitForElementByCss('#error-boundary-message').text()

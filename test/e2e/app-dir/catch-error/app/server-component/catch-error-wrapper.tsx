@@ -1,8 +1,13 @@
 'use client'
 
-import { catchError } from 'next/navigation'
-
-function ErrorFallback(props, { error, reset, retry }) {
+export function ErrorFallback(
+  props: { title: string },
+  {
+    error,
+    reset,
+    retry,
+  }: { error: Error; reset: () => void; retry: () => void }
+) {
   return (
     <>
       <p id="error-boundary-message">{error.message}</p>
@@ -16,5 +21,3 @@ function ErrorFallback(props, { error, reset, retry }) {
     </>
   )
 }
-
-export default catchError(ErrorFallback)

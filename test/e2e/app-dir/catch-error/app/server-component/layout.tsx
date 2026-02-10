@@ -4,6 +4,6 @@ import { ErrorFallback } from './catch-error-wrapper'
 // catchError can be called from server
 const ErrorWrapper = catchError(ErrorFallback)
 
-export default function Layout({ children }) {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return <ErrorWrapper title="server-catch-error">{children}</ErrorWrapper>
 }
